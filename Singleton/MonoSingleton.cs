@@ -57,7 +57,7 @@ public abstract class MonoSingleton<T> : MonoBehaviour, ISingleton where T : Mon
         if (instance == null)
         {
             var obj = new GameObject(typeof(T).Name);
-            Object.DontDestroyOnLoad(obj);
+            DontDestroyOnLoad(obj);
             instance = obj.AddComponent<T>();
         }
 
@@ -81,7 +81,7 @@ public abstract class MonoSingleton<T> : MonoBehaviour, ISingleton where T : Mon
                 if (go == null)
                 {
                     go = new GameObject(goName);
-                    Object.DontDestroyOnLoad(go);
+                    DontDestroyOnLoad(go);
                 }
             }
             else
