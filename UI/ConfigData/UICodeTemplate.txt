@@ -1,6 +1,0 @@
-﻿using UnityEngine;
-
-public partial class [ClassName] : UIBasePanel
-{
-    [Reference]
-}
