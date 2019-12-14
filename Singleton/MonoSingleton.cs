@@ -2,7 +2,7 @@
 using System.Reflection;
 using UnityEngine;
 
-public abstract class MonoSingleton<T> : MonoBehaviour, ISingleton where T : MonoSingleton<T>
+public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T>
 {
     private static T _instance;
 
@@ -12,17 +12,18 @@ public abstract class MonoSingleton<T> : MonoBehaviour, ISingleton where T : Mon
         {
             if (_instance == null)
             {
-                _instance = CreateMonoSingleton<T>();
+                _instance = CreateMonoSingleton();
             }
 
             return _instance;
         }
     }
 
-    public virtual void OnSingletonInit()
+    public void Startup()
     {
 
     }
+
 
     public virtual void Dispose()
     {
@@ -36,10 +37,11 @@ public abstract class MonoSingleton<T> : MonoBehaviour, ISingleton where T : Mon
 
     #region Mono单例创建逻辑
 
-    private static T CreateMonoSingleton<T>() where T : MonoBehaviour, ISingleton
+    private static T CreateMonoSingleton()
     {
         T instance = null;
 
+        //根据attribute  创建
         MemberInfo info = typeof(T);
         var attributes = info.GetCustomAttributes(true);
         foreach (var atribute in attributes)
@@ -50,10 +52,11 @@ public abstract class MonoSingleton<T> : MonoBehaviour, ISingleton where T : Mon
                 continue;
             }
 
-            instance = CreateComponentOnGameObject<T>(defineAttri.PathInHierarchy);
+            instance = CreateByPath(defineAttri.PathInHierarchy);
             break;
         }
 
+        //如果没有attribute  直接用类字创建
         if (instance == null)
         {
             var obj = new GameObject(typeof(T).Name);
@@ -61,11 +64,11 @@ public abstract class MonoSingleton<T> : MonoBehaviour, ISingleton where T : Mon
             instance = obj.AddComponent<T>();
         }
 
-        instance.OnSingletonInit();
         return instance;
     }
 
-    private static T CreateComponentOnGameObject<T>(string path) where T : MonoBehaviour
+    //通过MonoSingletonPath的路径创建
+    private static T CreateByPath(string path)
     {
         string[] subPath = path.Split('/');
 

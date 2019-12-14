@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-public abstract class Singleton<T> : ISingleton where T : Singleton<T>
+public abstract class Singleton<T> where T : Singleton<T>
 {
     private static T _instance;
 
@@ -32,7 +32,6 @@ public abstract class Singleton<T> : ISingleton where T : Singleton<T>
 
                     // 通过构造函数，常见实例
                     _instance = ctor.Invoke(null) as T;
-                    _instance.OnSingletonInit();
 
                 }
             }
@@ -46,7 +45,5 @@ public abstract class Singleton<T> : ISingleton where T : Singleton<T>
         _instance = null;
     }
 
-    public virtual void OnSingletonInit()
-    {
-    }
+
 }

@@ -12,7 +12,7 @@ public class EventSystem : Singleton<EventSystem>
 {
     private readonly Dictionary<int, EventDispatcher> _allListenerMap = new Dictionary<int, EventDispatcher>(50);
 
-    #region 内部结构
+    #region 派发器
 
     private class EventDispatcher
     {
@@ -120,6 +120,5 @@ public class EventSystem : Singleton<EventSystem>
         _allListenerMap.Clear();
     }
     #endregion
-
 
 }
