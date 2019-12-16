@@ -74,11 +74,6 @@ public class UIManager : MonoSingleton<UIManager>
         panelData.handle = op;
         _allPanelData.Add(panelName, panelData);
 
-        op.Completed += delegate(AsyncOperationHandle handle)
-        {
-
-        };
-
         op.Completed += handle=>
         {
             if (op.Status == AsyncOperationStatus.Succeeded)
