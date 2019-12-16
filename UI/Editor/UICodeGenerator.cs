@@ -67,7 +67,8 @@ public class UICodeGenerator
 
         for (int i = 0; i < marks.Length; i++)
         {
-            referenceStr += "public GameObject " + marks[i].name + ";" + (i == marks.Length - 1 ? "" : "\r\t");
+            UIMark mark = marks[i];
+            referenceStr += "public "+ mark .ComponentName+" " + mark.name + ";" + (i == marks.Length - 1 ? "" : "\r\t");
         }
 
         string template = File.ReadAllText(UIReferenceTemplatePath);
@@ -138,9 +139,10 @@ public class UICodeGenerator
             {
                 for (int j = 0; j < marks.Length; j++)
                 {
-                    if (marks[j].name == fileFieldInfo.Name)
+                    UIMark mark = marks[j];
+                    if (mark.name == fileFieldInfo.Name)
                     {
-                        fileFieldInfo.SetValue(component, marks[j].gameObject);
+                        fileFieldInfo.SetValue(component, mark.GetComponent(mark.ComponentName));
                         break;
                     }
                 }
