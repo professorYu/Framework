@@ -1,6 +1,8 @@
 ﻿# Framework
  Unity游戏框架
 
+资源管理系统 ：addressable系统  需要导入
+"com.unity.addressables": "1.4.0",
 
  插件：
  插件都放Framework/Plugins文件夹下面
