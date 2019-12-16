@@ -18,7 +18,7 @@ public class UICodeGenerator
 
     private static string GenerateUIKey = "GenerateUIKey";
 
-    [MenuItem("Assets/生成UI代码")]
+    [MenuItem("Assets/生成UI代码",false,2001)]
     public static void CreateUICode()
     {
         var objs = Selection.GetFiltered(typeof(GameObject), SelectionMode.Assets | SelectionMode.TopLevel);
@@ -41,13 +41,21 @@ public class UICodeGenerator
             EditorUtility.DisplayProgressBar("", "生成UI代码中...", (float)(i + 1) / objs.Length);
         }
 
-        Debug.LogError(allPathStr);
-        PlayerPrefs.SetString(GenerateUIKey, allPathStr);
-
         EditorUtility.ClearProgressBar();
 
         AssetDatabase.Refresh();
-        AddGenComponent();
+
+
+        if (EditorApplication.isCompiling)
+        {
+            //如果需要编译   保存文件名  等编译完就添加
+            PlayerPrefs.SetString(GenerateUIKey, allPathStr);
+        }
+        else
+        {
+            //不需要编译   则 直接添加组件
+            GenUIPanel(allPathStr);
+        }
 
     }
 
@@ -59,7 +67,7 @@ public class UICodeGenerator
 
         for (int i = 0; i < marks.Length; i++)
         {
-            referenceStr += "public GameObject " + marks[i].name + ";\n\t";
+            referenceStr += "public GameObject " + marks[i].name + ";" + (i == marks.Length - 1 ? "" : "\r\t");
         }
 
         string template = File.ReadAllText(UIReferenceTemplatePath);
@@ -86,57 +94,87 @@ public class UICodeGenerator
     [DidReloadScripts]
     static void OnCompileEnd()
     {
-        AddGenComponent();
+        string allPathStr = PlayerPrefs.GetString(GenerateUIKey);
+        GenUIPanel(allPathStr);
+        PlayerPrefs.DeleteKey(GenerateUIKey);
     }
 
-    //添加生成的UI 组件
-    static void AddGenComponent()
+    //清理UI上的错误Panel组件   （通常是复制UI时候顺带复制过来的  先清理）
+    static void DeleteErrorComponent(Component component)
     {
-        string allPathStr = PlayerPrefs.GetString(GenerateUIKey);
+        if (component != null)
+        {
+            if (component.GetType().Name != component.name)
+            {
+                Object.DestroyImmediate(component);
+            }
+        }
+    }
+
+    //添加UI对应组件
+    static void AddPanelComponent(ref Component component, GameObject clone)
+    {
+        //UI上没有Panel组件  添加上去
+        if (component == null)
+        {
+            Assembly assembly = AppDomain.CurrentDomain.Load("Assembly-CSharp");
+            Type type = assembly.GetType(clone.name);
+            if (type != null)
+            {
+                component = clone.AddComponent(type);
+            }
+        }
+    }
+
+    //查找关联引用
+    static void FindReference(ref Component component, GameObject clone, string prefabPath)
+    {
+        //处理引用关联
+        if (component != null)
+        {
+            FieldInfo[] fileFieldInfos = component.GetType().GetFields();
+            UIMark[] marks = clone.transform.GetComponentsInChildren<UIMark>();
+            foreach (FieldInfo fileFieldInfo in fileFieldInfos)
+            {
+                for (int j = 0; j < marks.Length; j++)
+                {
+                    if (marks[j].name == fileFieldInfo.Name)
+                    {
+                        fileFieldInfo.SetValue(component, marks[j].gameObject);
+                        break;
+                    }
+                }
+            }
+
+        }
+    }
+
+
+    //添加生成的UI 组件
+    static void GenUIPanel(string allPathStr)
+    {
         if (IsNullOrEmpty(allPathStr)) return;
 
         string[] prefabPathArr = allPathStr.Split('|');
 
-        foreach (var prefabPath in prefabPathArr)
+        for (int i = 0; i < prefabPathArr.Length; i++)
         {
+            string prefabPath = prefabPathArr[i];
             GameObject obj = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             if (obj == null) continue;
 
             var clone = PrefabUtility.InstantiatePrefab(obj) as GameObject;
+            Component component = clone.GetComponent<UIBasePanel>();
 
-            string componentName = obj.name;
-            Component component = clone.GetComponent(componentName);
-
-            if (component == null)
-            {
-                Assembly assembly = AppDomain.CurrentDomain.Load("Assembly-CSharp");
-                Type type = assembly.GetType(componentName);
-                if (type != null)
-                {
-                    component = clone.AddComponent(type);
-                }
-            }
-
-            if (component != null)
-            {
-                FieldInfo[] fileFieldInfos = component.GetType().GetFields();
-                UIMark[] marks = clone.transform.GetComponentsInChildren<UIMark>();
-                foreach (FieldInfo fileFieldInfo in fileFieldInfos)
-                {
-                    for (int i = 0; i < marks.Length; i++)
-                    {
-                        if (marks[i].name == fileFieldInfo.Name)
-                        {
-                            fileFieldInfo.SetValue(component, marks[i].gameObject);
-                            break;
-                        }
-                    }
-                }
-                PrefabUtility.SaveAsPrefabAssetAndConnect(clone, prefabPath, InteractionMode.AutomatedAction);
-                PlayerPrefs.DeleteKey(GenerateUIKey);
-            }
+            //清理UI上的错误Panel组件   （通常是复制UI时候顺带复制过来的  先清理）
+            DeleteErrorComponent(component);
+            //UI上没有Panel组件  添加上去
+            AddPanelComponent(ref component, clone);
+            //关联引用
+            FindReference(ref component, clone, prefabPath);
 
 
+            PrefabUtility.SaveAsPrefabAssetAndConnect(clone, prefabPath, InteractionMode.AutomatedAction);
             Object.DestroyImmediate(clone);
         }
 
