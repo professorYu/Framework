@@ -6,10 +6,9 @@ using UnityEngine.UI;
 /// <summary>
 /// 编辑器上标记自动生成UI
 /// </summary>
-///
+[DisallowMultipleComponent]
 public class UIMark : MonoBehaviour
 {
-
     public string ComponentName
     {
         get

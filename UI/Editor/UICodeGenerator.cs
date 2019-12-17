@@ -1,6 +1,5 @@
 ﻿
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
@@ -8,37 +7,45 @@ using System.Reflection;
 using System.Text;
 using UnityEditor.Callbacks;
 using static System.String;
+using Application = UnityEngine.Application;
 using Object = UnityEngine.Object;
+using RectTransform = UnityEngine.RectTransform;
 
 public class UICodeGenerator
 {
     private static string UIMainTemplatePath = Application.dataPath + "/Framework/UI/ConfigData/UIMainTemplate.txt";
     private static string UIReferenceTemplatePath = Application.dataPath + "/Framework/UI/ConfigData/UIReferenceTemplate.txt";
-    private static string UIScriptSaveFolider = Application.dataPath + "/";
-
     private static string GenerateUIKey = "GenerateUIKey";
 
-    [MenuItem("Assets/生成UI代码",false,2001)]
+    //需要配置
+    private static string UIScriptSaveFolider = Application.dataPath + "/";
+
+    [MenuItem("Assets/生成UI代码 Ctrl+E刷新 %e", true, 2001)]
+    public static bool IsShowGenUICode()
+    {
+        var uiPrefabArr = Selection.GetFiltered(typeof(RectTransform), SelectionMode.Assets);
+        return uiPrefabArr.Length > 0;
+    }
+
+    [MenuItem("Assets/生成UI代码 Ctrl+E刷新 %e", false, 2001)]
     public static void CreateUICode()
     {
-        var objs = Selection.GetFiltered(typeof(GameObject), SelectionMode.Assets | SelectionMode.TopLevel);
+        Object[] uiPrefabArr = Selection.GetFiltered(typeof(RectTransform), SelectionMode.Assets);
         EditorUtility.DisplayProgressBar("", "生成UI代码中...", 0);
 
         //所有UI的路径合集  编译完要添加组件
         string allPathStr = "";
-        for (var i = 0; i < objs.Length; i++)
+        for (var i = 0; i < uiPrefabArr.Length; i++)
         {
-            GameObject obj = objs[i] as GameObject;
-            if (obj == null) continue;
+            RectTransform panelRect = uiPrefabArr[i] as RectTransform;
+            string uiPrefabPath = AssetDatabase.GetAssetPath(panelRect);
+            allPathStr += uiPrefabPath + (i == uiPrefabArr.Length - 1 ? "" : "|");
 
-            string uiPrefabPath = AssetDatabase.GetAssetPath(obj);
-            allPathStr += uiPrefabPath + (i == objs.Length - 1 ? "" : "|");
-
-            string componentName = obj.name;
-            WriteReferenceCode(obj, componentName);
+            string componentName = panelRect.name;
+            WriteReferenceCode(panelRect, componentName);
             WriteMainCode(componentName);
 
-            EditorUtility.DisplayProgressBar("", "生成UI代码中...", (float)(i + 1) / objs.Length);
+            EditorUtility.DisplayProgressBar("", "生成UI代码中...", (float)(i + 1) / uiPrefabArr.Length);
         }
 
         EditorUtility.ClearProgressBar();
@@ -56,19 +63,18 @@ public class UICodeGenerator
             //不需要编译   则 直接添加组件
             GenUIPanel(allPathStr);
         }
-
     }
 
     //写引用文件
-    private static void WriteReferenceCode(GameObject clone, string componentName)
+    private static void WriteReferenceCode(RectTransform panelGo, string componentName)
     {
-        UIMark[] marks = clone.transform.GetComponentsInChildren<UIMark>();
+        UIMark[] marks = panelGo.transform.GetComponentsInChildren<UIMark>();
         string referenceStr = "";
 
         for (int i = 0; i < marks.Length; i++)
         {
             UIMark mark = marks[i];
-            referenceStr += "public "+ mark .ComponentName+" " + mark.name + ";" + (i == marks.Length - 1 ? "" : "\r\t");
+            referenceStr += "public " + mark.ComponentName + " " + mark.name + ";" + (i == marks.Length - 1 ? "" : "\r\t");
         }
 
         string template = File.ReadAllText(UIReferenceTemplatePath);
@@ -89,8 +95,6 @@ public class UICodeGenerator
             File.WriteAllText(UIScriptSaveFolider + componentName + ".cs", template, Encoding.UTF8);
         }
     }
-
-
 
     [DidReloadScripts]
     static void OnCompileEnd()
@@ -147,10 +151,8 @@ public class UICodeGenerator
                     }
                 }
             }
-
         }
     }
-
 
     //添加生成的UI 组件
     static void GenUIPanel(string allPathStr)
@@ -175,10 +177,8 @@ public class UICodeGenerator
             //关联引用
             FindReference(ref component, clone, prefabPath);
 
-
             PrefabUtility.SaveAsPrefabAssetAndConnect(clone, prefabPath, InteractionMode.AutomatedAction);
             Object.DestroyImmediate(clone);
         }
-
     }
 }
