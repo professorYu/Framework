@@ -1,5 +1,6 @@
 ﻿# Framework
  Unity游戏框架
+基于Unity2018.4.11c1  （中国增强版  其他2018.4版本均可）
 
 资源管理系统 ：addressable系统  需要导入
 "com.unity.addressables": "1.4.0",
