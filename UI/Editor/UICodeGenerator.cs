@@ -17,8 +17,14 @@ public class UICodeGenerator
     private static string UIReferenceTemplatePath = Application.dataPath + "/Framework/UI/ConfigData/UIReferenceTemplate.txt";
     private static string GenerateUIKey = "GenerateUIKey";
 
-    //需要配置
-    private static string UIScriptSaveFolider = Application.dataPath + "/";
+    //生成脚本文件夹路径  读取框架设置
+    private static string GenScriptFolderPath
+    {
+        get
+        {
+            return FramewrokSettingConfig.UIScriptGenFolderPath + "/";
+        }
+    }
 
     [MenuItem("Assets/生成UI代码 Ctrl+E刷新 %e", true, 2001)]
     public static bool IsShowGenUICode()
@@ -81,18 +87,18 @@ public class UICodeGenerator
         template = template.Replace("[ClassName]", componentName);
         template = template.Replace("[Reference]", referenceStr);
 
-        File.WriteAllText(UIScriptSaveFolider + componentName + ".Reference.cs", template, Encoding.UTF8);
+        File.WriteAllText(GenScriptFolderPath + componentName + ".Reference.cs", template, Encoding.UTF8);
     }
 
     //写主文件
     private static void WriteMainCode(string componentName)
     {
-        string mainCodePath = UIScriptSaveFolider + componentName + ".cs";
+        string mainCodePath = GenScriptFolderPath + componentName + ".cs";
         if (!File.Exists(mainCodePath))
         {
             string template = File.ReadAllText(UIMainTemplatePath);
             template = template.Replace("[ClassName]", componentName);
-            File.WriteAllText(UIScriptSaveFolider + componentName + ".cs", template, Encoding.UTF8);
+            File.WriteAllText(GenScriptFolderPath + componentName + ".cs", template, Encoding.UTF8);
         }
     }
 
