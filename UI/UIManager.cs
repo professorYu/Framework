@@ -20,7 +20,7 @@ public class PanelData
     public AsyncOperationHandle handle;
 }
 
-[MonoSingletonPath("[UI]/UIManager")]
+[MonoSingletonPath("[Framework]/UIManager")]
 public class UIManager : MonoSingleton<UIManager>
 {
     //缓存UI父节点  分层
