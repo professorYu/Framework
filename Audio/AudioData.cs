@@ -108,10 +108,6 @@ public class AudioData
         {
             bool isMute = AudioManager.Instance.GetMuteStatus(Type);
             Source.mute = isMute;
-
-            //解决序章部分  暂停游戏时  静音了任然有声音的问题   enabled刷新一下就好了
-            //Source.enabled = false;
-            //Source.enabled = true;
         }
     }
 
@@ -139,37 +135,8 @@ public class AudioData
         {
             RefreshMuteStatus();
             Source.Play();
-            //if (Type == AudioType.Music)
-            //{
-            //    AudioManager.Instance.OnBgmPlayStart(this);
-            //}
-            
         }
     }
-
-    //public void RefreshAudioGroup()
-    //{
-    //    //SetAudioGroup(_mixType);
-    //}
-
-    //public void SetAudioGroup(MixType mixType)
-    //{
-    //    _mixType = mixType;
-    //    if (AudioManager.Instance.AudioMixerDic.ContainsKey(mixType))
-    //    {
-    //        AudioMixerGroup group = AudioManager.Instance.AudioMixerDic[mixType];
-    //        if (group == null)
-    //        {
-    //            return;
-    //        }
-
-    //        if (Source)
-    //        {
-    //            Source.outputAudioMixerGroup = group;
-    //        }
-    //    }
-            
-    //}
 
     public void Stop()
     {
@@ -179,7 +146,6 @@ public class AudioData
             Source.clip = null;
             FileName = "";
             Source.Stop();
-            //AudioManager.Instance.OnBgmStop(this);
         }
     }
 
@@ -188,10 +154,6 @@ public class AudioData
         if (Source)
         {
             Source.Pause();
-            //if (Type == AudioType.Music)
-            //{
-                //AudioManager.Instance.OnBgmPause(this);
-            //}
         }
     }
 
@@ -200,10 +162,6 @@ public class AudioData
         if (Source)
         {
             Source.UnPause();
-            //if (Type == AudioType.Music)
-            //{
-            //    AudioManager.Instance.OnBgmPlayStart(this);
-            //}
         }
     }
 
