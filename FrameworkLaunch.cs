@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// 游戏启动脚本   初始化一切 
+/// 初始化框架
 /// </summary>
-public class GameLaunch
+public class FrameworkLaunch
 {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     public static void OnLoadBeforeScene()
