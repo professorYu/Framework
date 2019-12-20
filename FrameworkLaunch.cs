@@ -6,7 +6,7 @@
 public class FrameworkLaunch
 {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    public static void OnLoadBeforeScene()
+    public static void InitFramework()
     {
         Application.targetFrameRate = 60;
         AudioManager.Instance.Startup();
