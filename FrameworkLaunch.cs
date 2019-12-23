@@ -9,6 +9,8 @@ public class FrameworkLaunch
     public static void InitFramework()
     {
         //Application.targetFrameRate = 60;
+        PoolManager.Instance.Startup();
+
         AudioManager.Instance.Startup();
         UIManager.Instance.Startup();
     }

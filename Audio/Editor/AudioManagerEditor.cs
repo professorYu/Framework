@@ -6,22 +6,22 @@ using UnityEngine;
 [CustomEditor(typeof(AudioManager))]
 public class AudioManagerEditor : Editor
 {
-    private bool _isShowData = true;
+    //private bool _isShowData = true;
     private string _nullReferenceName = "空引用";
 
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
-        if (_isShowData == false)
-        {
-            if (GUILayout.Button("显示可视化管理"))
-            {
-                _isShowData = true;
-            }
-        }
+        //if (_isShowData == false)
+        //{
+        //    if (GUILayout.Button("显示可视化管理"))
+        //    {
+        //        _isShowData = true;
+        //    }
+        //}
         
-        if (_isShowData)
-        {
+        //if (_isShowData)
+        //{
             var target = (AudioManager)(serializedObject.targetObject);
             EditorGUILayout.LabelField("声音设置 : ");
 
@@ -99,6 +99,6 @@ public class AudioManagerEditor : Editor
             }
         }
 
-    }
+    //}
 
 }

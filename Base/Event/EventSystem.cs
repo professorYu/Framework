@@ -67,7 +67,7 @@ public class EventSystem : Singleton<EventSystem>
 
     #region 功能函数
 
-    public bool Register<T>(T key, EventDelegate fun) where T : IConvertible
+    public bool Register(IConvertible key, EventDelegate fun)
     {
         int keyValue = key.ToInt32(null);
 
@@ -86,7 +86,7 @@ public class EventSystem : Singleton<EventSystem>
         return false;
     }
 
-    public void UnRegister<T>(T key, EventDelegate fun) where T : IConvertible
+    public void UnRegister(IConvertible key, EventDelegate fun) 
     {
         int keyValue = key.ToInt32(null);
         if (_allListenerMap.TryGetValue(keyValue, out var dispatcher))
@@ -95,7 +95,7 @@ public class EventSystem : Singleton<EventSystem>
         }
     }
 
-    public void UnRegister<T>(T key) where T : IConvertible
+    public void UnRegister(IConvertible key) 
     {
         int keyValue = key.ToInt32(null);
         if (_allListenerMap.TryGetValue(keyValue, out var dispatcher))
@@ -105,7 +105,7 @@ public class EventSystem : Singleton<EventSystem>
         }
     }
 
-    public bool Send<T>(T key, params object[] param) where T : IConvertible
+    public bool Send(IConvertible key, params object[] param) 
     {
         int keyValue = key.ToInt32(null);
         if (_allListenerMap.TryGetValue(keyValue, out var dispatcher))
