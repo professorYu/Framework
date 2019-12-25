@@ -8,7 +8,7 @@ public delegate void EventDelegate(params object[] param);
 
 #endregion
 
-public class EventSystem : Singleton<EventSystem>
+public class EventManager : Singleton<EventManager>
 {
     private readonly Dictionary<int, EventDispatcher> _allListenerMap = new Dictionary<int, EventDispatcher>(50);
 

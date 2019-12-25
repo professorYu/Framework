@@ -103,4 +103,9 @@ public class UIManager : MonoSingleton<UIManager>
         }
     }
 
+    public void CloseByUILevel(UILayer layer)
+    {
+
+    }
+
 }
