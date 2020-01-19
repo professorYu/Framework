@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -17,9 +16,15 @@ public enum UILayer
 public class PanelData
 {
     public UIBasePanel panel;
+    public string name;
+    public UILayer layer;
+    public bool IgnoreClose;
     public AsyncOperationHandle handle;
 }
 
+/// <summary>
+/// UI管理类
+/// </summary>
 [MonoSingletonPath("[Framework]/UIManager")]
 public class UIManager : MonoSingleton<UIManager>
 {
@@ -55,37 +60,64 @@ public class UIManager : MonoSingleton<UIManager>
         }
     }
 
-    public T GetPanel<T>() where T : UIBasePanel
+    private List<string> _ignoreClosePanelList = new List<string>();
+
+    //设置常驻的界面
+    public void SetIgnoreClose(params string[] panels) //where T : UIBasePanel
+    {
+        foreach (var panelName in panels)
+        {
+            _ignoreClosePanelList.Add(panelName);
+        }
+    }
+
+    public PanelData GetPanel<T>() where T : UIBasePanel
     {
         string panelName = typeof(T).ToString();
         _allPanelData.TryGetValue(panelName, out var panelData);
-        return panelData == null ? null : panelData.panel as T;
+        return panelData;
     }
 
-    public void Open<T>(UILayer layer = UILayer.Common, Action<T> callback = null) where T : UIBasePanel
+    public PanelData Open<T>(UILayer layer = UILayer.Common, Action<T> callback = null) where T : UIBasePanel
     {
         string panelName = typeof(T).ToString();
 
-        if (_allPanelData.ContainsKey(panelName)) return;
-
-        AsyncOperationHandle op = Addressables.InstantiateAsync(panelName);
+        if (_allPanelData.TryGetValue(panelName, out var data))
+        {
+            if (data.handle.IsDone)
+            {
+                data.panel.gameObject.SetActive(true);
+                data.panel.transform.SetAsLastSibling();
+                callback?.Invoke((T) data.panel);
+            }
+            return data;
+        }
 
         PanelData panelData = new PanelData();
-        panelData.handle = op;
         _allPanelData.Add(panelName, panelData);
 
-        op.Completed += handle=>
+        panelData.layer = layer;
+        panelData.name = panelName;
+
+        foreach (var ignoreName in _ignoreClosePanelList)
         {
-            if (op.Status == AsyncOperationStatus.Succeeded)
+            if (panelName == ignoreName)
             {
-                GameObject go = (GameObject)op.Result;
-                go.name = panelName;
-                go.transform.SetParent(_allPanelParentDict[layer], false);
-                T uiPanel = go.GetComponent<T>();
-                panelData.panel = uiPanel;
-                callback?.Invoke(uiPanel);
+                panelData.IgnoreClose = true;
+                break;
             }
-        };
+        }
+
+        panelData.handle = ResManager.Instance.Instantiate(panelName, panelGo =>
+        {
+            panelGo.name = panelName;
+            panelGo.transform.SetParent(_allPanelParentDict[layer], false);
+            T uiPanel = panelGo.GetComponent<T>();
+            panelData.panel = uiPanel;
+            callback?.Invoke(uiPanel);
+        });
+
+        return panelData;
     }
 
     public void Close<T>() where T : UIBasePanel
@@ -103,9 +135,45 @@ public class UIManager : MonoSingleton<UIManager>
         }
     }
 
-    public void CloseByUILevel(UILayer layer)
-    {
+    LinkedList<string> _closeList = new LinkedList<string>();
 
+    public void CloseAll()
+    {
+        _closeList.Clear();
+
+        foreach (var panelData in _allPanelData)
+        {
+            if (!panelData.Value.IgnoreClose)
+            {
+                _closeList.AddLast(panelData.Value.name);
+            }
+        }
+
+        foreach (string panelName in _closeList)
+        {
+            Close(panelName);
+        }
+
+        _closeList.Clear();
     }
 
+    public void CloseByUILevel(UILayer layer)
+    {
+        _closeList.Clear();
+
+        foreach (var panelData in _allPanelData)
+        {
+            if (panelData.Value.layer == layer && !panelData.Value.IgnoreClose)
+            {
+                _closeList.AddLast(panelData.Value.name);
+            }
+        }
+
+        foreach (string panelName in _closeList)
+        {
+            Close(panelName);
+        }
+
+        _closeList.Clear();
+    }
 }

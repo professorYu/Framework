@@ -45,7 +45,11 @@ namespace SRDebugger.Profiler
             CachedGameObject.hideFlags = HideFlags.NotEditable;
             CachedTransform.SetParent(Hierarchy.Get("SRDebugger"), true);
 
-            RenderPipeline.beginFrameRendering += RenderPipelineOnBeginFrameRendering;
+#if UNITY_2019_1_OR_NEWER
+            Camera.onPreRender += RenderPipelineOnBeginFrameRendering;
+#else
+             RenderPipeline.beginFrameRendering += RenderPipelineOnBeginFrameRendering;
+#endif
             StartCoroutine(EndOfFrameCoroutine());
         }
 
@@ -103,6 +107,11 @@ namespace SRDebugger.Profiler
         }
 
         private void RenderPipelineOnBeginFrameRendering(Camera[] obj)
+        {
+            _renderStartTime = _stopwatch.Elapsed.TotalSeconds;
+        }
+
+        private void RenderPipelineOnBeginFrameRendering(Camera obj)
         {
             _renderStartTime = _stopwatch.Elapsed.TotalSeconds;
         }

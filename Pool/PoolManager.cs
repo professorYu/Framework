@@ -2,9 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
+/// <summary>
+/// 对象池
+/// </summary>
 [MonoSingletonPath("[Framework]/PoolManager")]
 public class PoolManager : MonoSingleton<PoolManager>
 {
@@ -26,8 +28,24 @@ public class PoolManager : MonoSingleton<PoolManager>
         return default;
     }
 
+    public void Put(IConvertible key, Object item, float delay)
+    {
+        StartCoroutine(DelayPut(key, item, delay));
+    }
+
+    public IEnumerator DelayPut(IConvertible key, Object item, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        Put(key, item);
+    }
+
     public void Put(IConvertible key, Object item)
     {
+        if (item == null)
+        {
+            return;
+        }
+
         int keyValue = key.ToInt32(null);
         if (_pools.TryGetValue(keyValue, out var pool))
         {
@@ -50,7 +68,15 @@ public class PoolManager : MonoSingleton<PoolManager>
     public void RegisterPool(IConvertible key, Func<Object> createFunc, int initCount = 0)
     {
         int keyValue = key.ToInt32(null);
-        _pools.Add(keyValue, new ObjectPool(createFunc, initCount));
+        if (!_pools.ContainsKey(keyValue))
+        {
+            _pools.Add(keyValue, new ObjectPool(createFunc));
+        }
+
+        for (int i = 0; i < initCount; i++)
+        {
+            Put(keyValue, createFunc());
+        }
     }
 
     public void UnRegisterPool(IConvertible key)

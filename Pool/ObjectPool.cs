@@ -14,14 +14,9 @@ public class ObjectPool
     private readonly Stack<Object> _objStack = new Stack<Object>();
     private readonly Func<Object> _createFunc;
 
-    public ObjectPool(Func<Object> createFunc, int initCount = 0)
+    public ObjectPool(Func<Object> createFunc)
     {
         _createFunc = createFunc;
-
-        for (int i = 0; i < initCount; i++)
-        {
-            Put(_createFunc());
-        }
     }
 
     public void Put(Object item)
@@ -39,7 +34,6 @@ public class ObjectPool
         {
             return _objStack.Pop();
         }
-
     }
 
     public void Clear()

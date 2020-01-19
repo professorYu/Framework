@@ -22,7 +22,7 @@ public class UICodeGenerator
     {
         get
         {
-            return FramewrokSettingConfig.UIScriptGenFolderPath + "/";
+            return FrameworkSettingManager.Instance.UIScriptGenFolderPath + "/";
         }
     }
 

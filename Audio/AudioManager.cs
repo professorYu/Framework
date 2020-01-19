@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.Audio;
-using UnityEngine.ResourceManagement.AsyncOperations;
 
 public enum AudioType
 {
@@ -18,16 +14,19 @@ public enum AudioType
     UISfx = 3,
 }
 
+public class AudioSetting
+{
+    public float Volume = 0.5f;
+    public float Pitch = 1f;
+    public bool IsMute = false;
+}
+
+/// <summary>
+/// 声音管理类
+/// </summary>
 [MonoSingletonPath("[Framework]/AudioManager")]
 public class AudioManager : MonoSingleton<AudioManager>
 {
-    private class AudioSetting
-    {
-        public float Volume = 1f;
-        public bool IsMute = false;
-        //public float Pitch = 1f;
-    }
-
     /// <summary>
     /// 声音设置  Dictionary
     /// </summary>
@@ -49,8 +48,11 @@ public class AudioManager : MonoSingleton<AudioManager>
 
         foreach (AudioType type in Enum.GetValues(typeof(AudioType)))
         {
-            AudioSetting setting = new AudioSetting();
-            _audioSettingDic.Add(type, setting);
+            if (type != AudioType.All)
+            {
+                AudioSetting setting = new AudioSetting();
+                _audioSettingDic.Add(type, setting);
+            }
         }
 
     }
@@ -94,8 +96,6 @@ public class AudioManager : MonoSingleton<AudioManager>
         return data;
     }
 
-
-
     /// <summary>
     /// 最终播放函数
     /// </summary>
@@ -114,27 +114,24 @@ public class AudioManager : MonoSingleton<AudioManager>
             return null;
         }
 
-        AudioType type = data.Type;
-        data.SetVolume(GetVolumeByType(type));
-
-        //有音频文件  直接播放
         if (!string.IsNullOrEmpty(data.FileName))
         {
             data.IsClipLoading = true;
-            var op = Addressables.LoadAssetAsync<AudioClip>(data.FileName);
 
-            op.Completed += handle =>
+            ResManager.Instance.Load<AudioClip>(data.FileName, clip =>
             {
-                if (handle.Status == AsyncOperationStatus.Succeeded)
+                if (source && data.IsClipLoading)
                 {
-                    if (source && data.IsClipLoading)
-                    {
-                        source.clip = handle.Result;
-                        data.Play();
-                    }
+                    source.clip = clip;
+
+                    AudioType type = data.Type;
+                    data.SetVolume(GetVolumeByType(type));
+                    data.SetPitch(GetPitch(type));
+                    data.SetMuteStatus(GetMuteStatus(type));
+                    data.Play();
                 }
                 data.IsClipLoading = false;
-            };
+            });
         }
 
         return data;
@@ -159,6 +156,8 @@ public class AudioManager : MonoSingleton<AudioManager>
         for (int i = 0; i < AllAudioDataList.Count; i++)
         {
             AudioData audioData = AllAudioDataList[i];
+            if(audioData.Type == AudioType.Music)continue;
+
             if (audioData.Source == null)
             {
                 idledata = audioData;
@@ -260,15 +259,24 @@ public class AudioManager : MonoSingleton<AudioManager>
     public void SetMuteStatus(bool isMute, AudioType type = AudioType.All)
     {
         //Logger.LogError("设置静音状态 isMute : " + isMute + " + type : " + type);
-        AudioSetting setting = _audioSettingDic[type];
-        setting.IsMute = isMute;
+        foreach (var audioSetting in _audioSettingDic)
+        {
+            if (type == AudioType.All || type == audioSetting.Key)
+            {
+                audioSetting.Value.IsMute = isMute;
+            }
+        }
 
         for (int i = 0; i < AllAudioDataList.Count; i++)
         {
             AudioData data = AllAudioDataList[i];
-            data.RefreshMuteStatus();
+            if (data.Type == type || type == AudioType.All)
+            {
+                data.SetMuteStatus(GetMuteStatus(data.Type));
+            }
         }
     }
+
     public bool GetMuteStatus(AudioType type = AudioType.All)
     {
         return _audioSettingDic[type].IsMute;
@@ -297,8 +305,14 @@ public class AudioManager : MonoSingleton<AudioManager>
     /// <param name="isFade">是否渐变</param>
     public void SetVolume(float volume, AudioType type = AudioType.All, bool isFade = false)
     {
-        AudioSetting setting = _audioSettingDic[type];
-        setting.Volume = volume;
+        foreach (var audioSetting in _audioSettingDic)
+        {
+            if (type == AudioType.All || type == audioSetting.Key)
+            {
+                audioSetting.Value.Volume = volume;
+            }
+        }
+
         for (int i = 0; i < AllAudioDataList.Count; i++)
         {
             AudioData data = AllAudioDataList[i];
@@ -320,4 +334,34 @@ public class AudioManager : MonoSingleton<AudioManager>
         return setting.Volume;
     }
 
+    public void SetPitch(float pitch, AudioType type = AudioType.All)
+    {
+        foreach (var audioSetting in _audioSettingDic)
+        {
+            if (type == AudioType.All || type == audioSetting.Key)
+            {
+                audioSetting.Value.Pitch = pitch;
+            }
+        }
+
+        for (int i = 0; i < AllAudioDataList.Count; i++)
+        {
+            AudioData data = AllAudioDataList[i];
+            if (data.Type == type || type == AudioType.All)
+            {
+                data.SetPitch(GetPitch(data.Type));
+            }
+        }
+    }
+
+    public float GetPitch(AudioType type = AudioType.All)
+    {
+        AudioSetting setting = _audioSettingDic[type];
+        return setting.Pitch;
+    }
+
+    public Dictionary<AudioType, AudioSetting> GetAudioSetting()
+    {
+        return _audioSettingDic;
+    }
 }

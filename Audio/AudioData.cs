@@ -67,11 +67,6 @@ public class AudioData
             case VoiceType.Is3D:
                 Set3DVoiceSetting();
                 break;
-            default:
-#if UNITY_EDITOR
-                Debug.LogError("未实现声音类型");
-#endif
-                break;
         }
     }
 
@@ -102,12 +97,19 @@ public class AudioData
     /// <summary>
     /// 刷新静音状态
     /// </summary>
-    public void RefreshMuteStatus()
+    public void SetMuteStatus(bool isMute)
     {
         if (Source)
         {
-            bool isMute = AudioManager.Instance.GetMuteStatus(Type);
             Source.mute = isMute;
+        }
+    }
+
+    public void SetPitch(float pitch)
+    {
+        if (Source)
+        {
+            Source.pitch = pitch;
         }
     }
 
@@ -133,7 +135,6 @@ public class AudioData
     {
         if (Source)
         {
-            RefreshMuteStatus();
             Source.Play();
         }
     }
